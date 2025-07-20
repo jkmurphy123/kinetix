@@ -77,6 +77,10 @@ class ChatWindow(QWidget):
             self.scroll_area.verticalScrollBar().maximum()
         )
 
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Escape:
+            QApplication.quit()
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = ChatWindow()
