@@ -1,0 +1,7 @@
+# Core dependencies
+openai>=1.0.0
+python-dotenv
+PyQt5
+
+# Optional: for YAML config support, uncomment if needed
+# PyYAML
