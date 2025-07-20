@@ -1,33 +1,18 @@
-import random
-import time
+import sys
+import asyncio
+from PyQt5.QtWidgets import QApplication
+from chat_gui import ChatWindow
 from config_loader import ChatConfig
-from chatgpt_api import get_response
+from conversation_manager import ConversationManager
 
-config = ChatConfig("config.json")
-p1, p2 = config.get_two_random_personalities()
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
 
-# Create shared conversation history
-conversation = []
+    config = ChatConfig("config.json")
+    chat_window = ChatWindow()
+    chat_window.showFullScreen()
 
-# First prompt: p1 asks a random friendly question
-starter_prompt = "Ask a friendly question to get to know someone better."
-first_message = get_response(p1.prompt, [{"role": "user", "content": starter_prompt}])
-conversation.append({"role": "user", "content": first_message})
-print(f"{p1.name}: {first_message}")
+    manager = ConversationManager(config, chat_window)
+    manager.start()
 
-# Alternate responses for N turns
-turns = random.randint(config.min_turns, config.max_turns)
-
-for i in range(turns):
-    if i % 2 == 0:
-        responder = p2
-        role = "assistant"
-    else:
-        responder = p1
-        role = "user"
-
-    response = get_response(responder.prompt, conversation)
-    print(f"{responder.name}: {response}")
-    conversation.append({"role": role, "content": response})
-
-    time.sleep(1)  # optional delay for realism
+    sys.exit(app.exec_())

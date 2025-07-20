@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtGui import QPixmap, QColor
 from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTimer
 
 from dotenv import load_dotenv
 
@@ -47,12 +48,11 @@ class ChatWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("AI Chat Simulator")
-        #self.setGeometry(100, 100, 600, 400)  #windowed version
         self.showFullScreen()
+        #self.setGeometry(100, 100, 600, 400)
 
         main_layout = QVBoxLayout(self)
 
-        # Scrollable chat area
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)
         self.scroll_content = QWidget()
@@ -63,23 +63,15 @@ class ChatWindow(QWidget):
         main_layout.addWidget(self.scroll_area)
         self.setLayout(main_layout)
 
-        config = ChatConfig("config.json")
-        person1, person2 = config.get_two_random_personalities()
-
-        print("Starting chat between:")
-        print(f"- {person1.name}: {person1.prompt}")
-        print(f"- {person2.name}: {person2.prompt}")
-
-        # Add sample messages
-        self.add_message("images/avatar1.png", "Hello there! What's your favorite movie?", "#D0F0C0", align_left=True)
-        self.add_message("images/avatar2.png", "I'd say Blade Runner. You?", "#ADD8E6", align_left=False)
-
     def add_message(self, avatar_path, message, color, align_left=True):
-        bubble = ChatBubble(avatar_path, message, color, align_left)
-        self.chat_layout.addWidget(bubble)
-        self.scroll_area.verticalScrollBar().setValue(
-            self.scroll_area.verticalScrollBar().maximum()
-        )
+        print(f"add_messae: {message}")
+        def add():
+            bubble = ChatBubble(avatar_path, message, color, align_left)
+            self.chat_layout.addWidget(bubble)
+            self.scroll_area.verticalScrollBar().setValue(
+                self.scroll_area.verticalScrollBar().maximum()
+            )
+        QTimer.singleShot(0, add)  # Safe Qt-thread context execution
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape:
