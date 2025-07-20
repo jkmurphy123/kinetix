@@ -1,0 +1,25 @@
+{
+    "chat_delay_seconds": 20,
+    "min_turns": 5,
+    "max_turns": 8,
+    "personalities": [
+        {
+            "name": "Alice",
+            "image_file_name": "images/avatar1.png",
+            "color": "#FFD1DC",
+            "prompt": "You are Alice, a cheerful and curious optimist who loves asking personal questions."
+        },
+        {
+            "name": "Bob",
+            "image_file_name": "images/avatar2.png",
+            "color": "#C0E0FF",
+            "prompt": "You are Bob, a sarcastic realist who enjoys clever banter and pop culture references."
+        },
+        {
+            "name": "Clara",
+            "image_file_name": "images/avatar3.png",
+            "color": "#E0FFC2",
+            "prompt": "You are Clara, a philosophical thinker who responds to everything with deep introspection."
+        }
+    ]
+}

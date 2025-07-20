@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtGui import QPixmap, QColor
 from PyQt5.QtCore import Qt
+from config_loader import ChatConfig
 
 class ChatBubble(QWidget):
     def __init__(self, avatar_path, message, color, align_left=True):
@@ -42,7 +43,8 @@ class ChatWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("AI Chat Simulator")
-        self.setGeometry(100, 100, 600, 400)
+        #self.setGeometry(100, 100, 600, 400)  #windowed version
+        self.showFullScreen()
 
         main_layout = QVBoxLayout(self)
 
@@ -56,6 +58,13 @@ class ChatWindow(QWidget):
 
         main_layout.addWidget(self.scroll_area)
         self.setLayout(main_layout)
+
+        config = ChatConfig("config.json")
+        person1, person2 = config.get_two_random_personalities()
+
+        print("Starting chat between:")
+        print(f"- {person1.name}: {person1.prompt}")
+        print(f"- {person2.name}: {person2.prompt}")
 
         # Add sample messages
         self.add_message("images/avatar1.png", "Hello there! What's your favorite movie?", "#D0F0C0", align_left=True)
