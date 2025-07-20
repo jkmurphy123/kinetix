@@ -1,10 +1,14 @@
 import sys
+import os
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QLabel, QVBoxLayout, QHBoxLayout,
     QScrollArea, QFrame, QSizePolicy
 )
 from PyQt5.QtGui import QPixmap, QColor
 from PyQt5.QtCore import Qt
+
+from dotenv import load_dotenv
+
 from config_loader import ChatConfig
 
 class ChatBubble(QWidget):
@@ -82,6 +86,9 @@ class ChatWindow(QWidget):
             QApplication.quit()
 
 if __name__ == "__main__":
+    load_dotenv()  # Loads variables from .env
+    api_key = os.getenv("OPENAI_API_KEY")
+
     app = QApplication(sys.argv)
     window = ChatWindow()
     window.show()
