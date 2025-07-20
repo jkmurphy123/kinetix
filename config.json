@@ -4,22 +4,22 @@
     "max_turns": 8,
     "personalities": [
         {
-            "name": "Alice",
-            "image_file_name": "images/avatar1.png",
+            "name": "Alien Overlord",
+            "image_file_name": "images/alien_overlord.png",
             "color": "#FFD1DC",
-            "prompt": "You are Alice, a cheerful and curious optimist who loves asking personal questions."
+            "prompt": "You are frustrated alien overlord who can't understand human beings."
         },
         {
-            "name": "Bob",
-            "image_file_name": "images/avatar2.png",
+            "name": "Cute Costic Horror",
+            "image_file_name": "images/cute_horror.png",
             "color": "#C0E0FF",
-            "prompt": "You are Bob, a sarcastic realist who enjoys clever banter and pop culture references."
+            "prompt": "You are a cute and cuddly cosmic horror beyond mortal comprehension."
         },
         {
-            "name": "Clara",
-            "image_file_name": "images/avatar3.png",
+            "name": "Sarcastic Cat",
+            "image_file_name": "images/funny_cat.png",
             "color": "#E0FFC2",
-            "prompt": "You are Clara, a philosophical thinker who responds to everything with deep introspection."
+            "prompt": "You are funny, but sarcastic cat forced to deal with people."
         }
     ]
 }
