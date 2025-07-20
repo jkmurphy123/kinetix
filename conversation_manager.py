@@ -1,4 +1,7 @@
+from PyQt5.QtWidgets import QLabel, QWidget, QHBoxLayout
+from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import Qt
 import random
 from chatgpt_api import get_response
 
@@ -32,24 +35,65 @@ class ConversationManager:
 
     def _next_turn(self):
         if self.turn_index >= self.turns:
-            # Conversation ended, start a new one after delay
             QTimer.singleShot(self.config.chat_delay_seconds * 1000, self._start_new_chat)
             return
 
-        # Alternate speakers
         if self.turn_index % 2 == 0:
+            # person2 is replying
             speaker = self.person2
-            role = "assistant"
+            responder_role = "assistant"
             align = False
         else:
+            # person1 is replying
             speaker = self.person1
-            role = "user"
+            responder_role = "user"
             align = True
 
+        # --- STEP 1: Add typing bubble ---
+        self.typing_label = QLabel("typing...")
+        self.typing_label.setStyleSheet(f"""
+            background-color: {speaker.color};
+            border-radius: 10px;
+            padding: 10px;
+            font-style: italic;
+            color: #444;
+        """)
+        layout = QHBoxLayout()
+        avatar = QLabel()
+        avatar.setPixmap(QPixmap(speaker.image_file_name).scaled(40, 40, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+
+        if align:
+            layout.addWidget(avatar)
+            layout.addWidget(self.typing_label)
+            layout.addStretch()
+        else:
+            layout.addStretch()
+            layout.addWidget(self.typing_label)
+            layout.addWidget(avatar)
+
+        bubble = QWidget()
+        bubble.setLayout(layout)
+        self.chat_window.chat_layout.addWidget(bubble)
+        self.chat_window.scroll_area.verticalScrollBar().setValue(
+            self.chat_window.scroll_area.verticalScrollBar().maximum()
+        )
+
+        # --- STEP 2: After delay, replace typing with real message ---
+        QTimer.singleShot(2500, lambda: self._show_response(speaker, responder_role, align, bubble))
+
+    def _show_response(self, speaker, responder_role, align, typing_widget):
+        # Get actual reply
         reply = get_response(speaker.prompt, self.history)
+
+        # Remove "typing..." bubble
+        self.chat_window.chat_layout.removeWidget(typing_widget)
+        typing_widget.deleteLater()
+
+        # Show real message
         self.chat_window.add_message(speaker.image_file_name, reply, speaker.color, align)
-        self.history.append({"role": role, "content": reply})
+        self.history.append({"role": responder_role, "content": reply})
+
         self.turn_index += 1
 
-        # Schedule next message
+        # Delay next turn
         QTimer.singleShot(2000, self._next_turn)
