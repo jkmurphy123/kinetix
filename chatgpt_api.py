@@ -18,7 +18,7 @@ def get_response(system_prompt, conversation_history):
             model="gpt-3.5-turbo",
             messages=messages,
             temperature=0.9,
-            max_tokens=150
+            max_tokens=100
         )
         return response.choices[0].message.content.strip()
     except Exception as e:

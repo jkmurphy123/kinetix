@@ -30,8 +30,8 @@ class ChatBubble(QWidget):
             color: black;
             font-size: 14px;
         """)
-        bubble.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-        bubble.setMaximumWidth(400)
+        bubble.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
+        bubble.setMaximumWidth(600)
 
         if align_left:
             layout.addWidget(avatar)
@@ -64,7 +64,7 @@ class ChatWindow(QWidget):
         self.setLayout(main_layout)
 
     def add_message(self, avatar_path, message, color, align_left=True):
-        print(f"add_messae: {message}")
+        #print(f"add_messae: {message}")
         def add():
             bubble = ChatBubble(avatar_path, message, color, align_left)
             self.chat_layout.addWidget(bubble)
