@@ -34,7 +34,7 @@ class ConversationManager:
 
         QTimer.singleShot(2000, self._next_turn)
 
-    def split_message_into_chunks(text, max_chars=200):
+    def split_message_into_chunks(self, text, max_chars=200):
         """Split a long message into chunks by sentence or length."""
         sentences = re.split(r'(?<=[.!?])\s+', text)
         chunks = []
