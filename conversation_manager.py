@@ -3,6 +3,7 @@ from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import QTimer
 from PyQt5.QtCore import Qt
 import random
+import re
 from chatgpt_api import get_response
 
 class ConversationManager:
@@ -89,14 +90,24 @@ class ConversationManager:
         self.chat_window.chat_layout.removeWidget(typing_widget)
         typing_widget.deleteLater()
 
-        # Show real message
-        self.chat_window.add_message(speaker.image_file_name, reply, speaker.color, align)
-        self.history.append({"role": responder_role, "content": reply})
+        # Split the reply into readable chunks
+        from utils import split_message_into_chunks  # or move it inline
+        chunks = split_message_into_chunks(reply, max_chars=200)
 
+        # Display each chunk as a separate bubble
+        for i, chunk in enumerate(chunks):
+            delay_ms = i * 1500  # delay each message a bit
+            QTimer.singleShot(delay_ms, lambda c=chunk: self.chat_window.add_message(
+                speaker.image_file_name, c, speaker.color, align
+            ))
+
+        # Only append the full message to the GPT history
+        self.history.append({"role": responder_role, "content": reply})
         self.turn_index += 1
 
-        # Delay next turn
-        QTimer.singleShot(4000, self._next_turn)
+        # Schedule next turn after the final chunk
+        final_delay = len(chunks) * 1500 + 3000
+        QTimer.singleShot(final_delay, self._next_turn)
 
     def _say_goodbye(self):
         speaker = self.person1
@@ -111,3 +122,21 @@ class ConversationManager:
 
         # Wait before starting a new conversation
         QTimer.singleShot((self.config.chat_delay_seconds + 1) * 1000, self._start_new_chat)        
+
+    def split_message_into_chunks(text, max_chars=200):
+        """Split a long message into chunks by sentence or length."""
+        sentences = re.split(r'(?<=[.!?])\s+', text)
+        chunks = []
+        current_chunk = ""
+
+        for sentence in sentences:
+            if len(current_chunk) + len(sentence) < max_chars:
+                current_chunk += " " + sentence
+            else:
+                chunks.append(current_chunk.strip())
+                current_chunk = sentence
+
+        if current_chunk:
+            chunks.append(current_chunk.strip())
+
+        return chunks        
