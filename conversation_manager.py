@@ -148,7 +148,7 @@ class ConversationManager:
         typing_widget.deleteLater()
 
         # Split long reply into chunks
-        chunks = split_message_into_chunks(reply, max_chars=200)
+        chunks = self.split_message_into_chunks(reply, 200)
 
         # Show each chunk with typing delay
         total_delay = 0
