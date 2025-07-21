@@ -35,7 +35,7 @@ class ConversationManager:
 
     def _next_turn(self):
         if self.turn_index >= self.turns:
-            QTimer.singleShot(self.config.chat_delay_seconds * 1000, self._start_new_chat)
+            self._say_goodbye()
             return
 
         if self.turn_index % 2 == 0:
@@ -96,4 +96,18 @@ class ConversationManager:
         self.turn_index += 1
 
         # Delay next turn
-        QTimer.singleShot(2000, self._next_turn)
+        QTimer.singleShot(4000, self._next_turn)
+
+    def _say_goodbye(self):
+        speaker = self.person1
+        align = True
+        role = "user"
+
+        goodbye_prompt = "Say goodbye to the other person in a friendly and character-appropriate way."
+        goodbye_text = get_response(speaker.prompt, [{"role": "user", "content": goodbye_prompt}])
+
+        self.chat_window.add_message(speaker.image_file_name, goodbye_text, speaker.color, align)
+        self.history.append({"role": role, "content": goodbye_text})
+
+        # Wait before starting a new conversation
+        QTimer.singleShot((self.config.chat_delay_seconds + 1) * 1000, self._start_new_chat)        
