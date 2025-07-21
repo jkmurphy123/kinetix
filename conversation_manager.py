@@ -110,7 +110,7 @@ class ConversationManager:
 
         # Split the reply into readable chunks
         #from utils import split_message_into_chunks  # or move it inline
-        chunks = split_message_into_chunks(reply, max_chars=200)
+        chunks = self.split_message_into_chunks(reply, max_chars=200)
 
         # Display each chunk as a separate bubble
         for i, chunk in enumerate(chunks):
