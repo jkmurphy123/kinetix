@@ -5,6 +5,7 @@ from PyQt5.QtCore import Qt
 import random
 import re
 from chatgpt_api import get_response
+from functools import partial
 
 class ConversationManager:
     def __init__(self, config, chat_window):
@@ -52,6 +53,44 @@ class ConversationManager:
 
         return chunks      
     
+    def _show_typing_bubble(self, speaker, align, final_text):
+        # Create typing bubble widget
+        typing_label = QLabel("typing...")
+        typing_label.setStyleSheet(f"""
+            background-color: {speaker.color};
+            border-radius: 10px;
+            padding: 10px;
+            font-style: italic;
+            color: #444;
+        """)
+        layout = QHBoxLayout()
+        avatar = QLabel()
+        avatar.setPixmap(QPixmap(speaker.image_file_name).scaled(40, 40, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+
+        if align:
+            layout.addWidget(avatar)
+            layout.addWidget(typing_label)
+            layout.addStretch()
+        else:
+            layout.addStretch()
+            layout.addWidget(typing_label)
+            layout.addWidget(avatar)
+
+        bubble = QWidget()
+        bubble.setLayout(layout)
+        self.chat_window.chat_layout.addWidget(bubble)
+        self.chat_window.scroll_area.verticalScrollBar().setValue(
+            self.chat_window.scroll_area.verticalScrollBar().maximum()
+        )
+
+        # Replace typing with real chunk after short delay
+        QTimer.singleShot(1200, lambda: self._replace_typing_bubble(bubble, speaker, final_text, align))
+
+    def _finalize_turn(self, responder_role, full_text):
+        self.history.append({"role": responder_role, "content": full_text})
+        self.turn_index += 1
+        QTimer.singleShot(3000, self._next_turn)
+
     def _next_turn(self):
         if self.turn_index >= self.turns:
             self._say_goodbye()
@@ -108,24 +147,19 @@ class ConversationManager:
         self.chat_window.chat_layout.removeWidget(typing_widget)
         typing_widget.deleteLater()
 
-        # Split the reply into readable chunks
-        #from utils import split_message_into_chunks  # or move it inline
-        chunks = self.split_message_into_chunks(reply, 200)
+        # Split long reply into chunks
+        chunks = split_message_into_chunks(reply, max_chars=200)
 
-        # Display each chunk as a separate bubble
+        # Show each chunk with typing delay
+        total_delay = 0
         for i, chunk in enumerate(chunks):
-            delay_ms = i * 1500  # delay each message a bit
-            QTimer.singleShot(delay_ms, lambda c=chunk: self.chat_window.add_message(
-                speaker.image_file_name, c, speaker.color, align
-            ))
+            delay = i * 2500  # adjust delay between bubbles
 
-        # Only append the full message to the GPT history
-        self.history.append({"role": responder_role, "content": reply})
-        self.turn_index += 1
+            QTimer.singleShot(delay, partial(self._show_typing_bubble, speaker, align, chunk))
 
-        # Schedule next turn after the final chunk
-        final_delay = len(chunks) * 1500 + 3000
-        QTimer.singleShot(final_delay, self._next_turn)
+        # Add full reply to history once all chunks are sent
+        final_delay = len(chunks) * 2500 + 500  # buffer after last message
+        QTimer.singleShot(final_delay, lambda: self._finalize_turn(responder_role, reply))
 
     def _say_goodbye(self):
         speaker = self.person1
