@@ -34,6 +34,24 @@ class ConversationManager:
 
         QTimer.singleShot(2000, self._next_turn)
 
+    def split_message_into_chunks(text, max_chars=200):
+        """Split a long message into chunks by sentence or length."""
+        sentences = re.split(r'(?<=[.!?])\s+', text)
+        chunks = []
+        current_chunk = ""
+
+        for sentence in sentences:
+            if len(current_chunk) + len(sentence) < max_chars:
+                current_chunk += " " + sentence
+            else:
+                chunks.append(current_chunk.strip())
+                current_chunk = sentence
+
+        if current_chunk:
+            chunks.append(current_chunk.strip())
+
+        return chunks      
+    
     def _next_turn(self):
         if self.turn_index >= self.turns:
             self._say_goodbye()
@@ -91,7 +109,7 @@ class ConversationManager:
         typing_widget.deleteLater()
 
         # Split the reply into readable chunks
-        from utils import split_message_into_chunks  # or move it inline
+        #from utils import split_message_into_chunks  # or move it inline
         chunks = split_message_into_chunks(reply, max_chars=200)
 
         # Display each chunk as a separate bubble
@@ -123,20 +141,4 @@ class ConversationManager:
         # Wait before starting a new conversation
         QTimer.singleShot((self.config.chat_delay_seconds + 1) * 1000, self._start_new_chat)        
 
-    def split_message_into_chunks(text, max_chars=200):
-        """Split a long message into chunks by sentence or length."""
-        sentences = re.split(r'(?<=[.!?])\s+', text)
-        chunks = []
-        current_chunk = ""
-
-        for sentence in sentences:
-            if len(current_chunk) + len(sentence) < max_chars:
-                current_chunk += " " + sentence
-            else:
-                chunks.append(current_chunk.strip())
-                current_chunk = sentence
-
-        if current_chunk:
-            chunks.append(current_chunk.strip())
-
-        return chunks        
+  
