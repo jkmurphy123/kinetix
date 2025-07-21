@@ -86,6 +86,12 @@ class ConversationManager:
         # Replace typing with real chunk after short delay
         QTimer.singleShot(1200, lambda: self._replace_typing_bubble(bubble, speaker, final_text, align))
 
+    def _replace_typing_bubble(self, bubble_widget, speaker, text, align):
+        self.chat_window.chat_layout.removeWidget(bubble_widget)
+        bubble_widget.deleteLater()
+
+        self.chat_window.add_message(speaker.image_file_name, text, speaker.color, align)
+
     def _finalize_turn(self, responder_role, full_text):
         self.history.append({"role": responder_role, "content": full_text})
         self.turn_index += 1
