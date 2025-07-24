@@ -67,6 +67,14 @@ class ChatWindow(QWidget):
         main_layout.addWidget(self.scroll_area)
         self.setLayout(main_layout)
 
+    def clear_chat(self):
+        while self.chat_layout.count():
+            item = self.chat_layout.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+
+
     def add_message(self, avatar_path, message, color, align_left=True):
         def add():
             # Log message
@@ -82,6 +90,32 @@ class ChatWindow(QWidget):
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape:
             QApplication.quit()
+
+    def show_placeholder_message(self, message: str):
+        placeholder_label = QLabel(message)
+        placeholder_label.setStyleSheet("""
+            background-color: #f0f0f0;
+            border: 1px dashed #aaa;
+            padding: 15px;
+            border-radius: 10px;
+            font-style: italic;
+            font-size: 16px;
+            color: #555;
+        """)
+        placeholder_label.setAlignment(Qt.AlignCenter)
+
+        placeholder_container = QWidget()
+        layout = QHBoxLayout()
+        layout.addStretch()
+        layout.addWidget(placeholder_label)
+        layout.addStretch()
+        placeholder_container.setLayout(layout)
+
+        self.chat_layout.addWidget(placeholder_container)
+        self.scroll_area.verticalScrollBar().setValue(
+            self.scroll_area.verticalScrollBar().maximum()
+        )
+
 
 if __name__ == "__main__":
     load_dotenv()  # Loads variables from .env

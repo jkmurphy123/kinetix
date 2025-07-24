@@ -198,13 +198,20 @@ class ConversationManager:
         goodbye_prompt = "Say goodbye to the other person in a friendly and character-appropriate way."
         goodbye_text = get_response(speaker.prompt, [{"role": "user", "content": goodbye_prompt}])
 
-        with open(self.conv_log_path, "a", encoding="utf-8") as f:
-            f.write(f"{speaker.name}: {goodbye_text}\n\n[Conversation End]\n")
-
         self.chat_window.add_message(speaker.image_file_name, goodbye_text, speaker.color, align)
         self.history.append({"role": role, "content": goodbye_text})
 
-        # Wait before starting a new conversation
-        QTimer.singleShot((self.config.chat_delay_seconds + 1) * 1000, self._start_new_chat)        
+        # Log to conversation log
+        if self.conv_log_path:
+            with open(self.conv_log_path, "a", encoding="utf-8") as f:
+                f.write(f"{speaker.name}: {goodbye_text}\n\n[Conversation End]\n")
 
-  
+        # Show placeholder message during idle
+        self.chat_window.show_placeholder_message("New conversation loading…")
+
+        # Delay 60s → clear screen → start new conversation
+        QTimer.singleShot(60000, self._reset_and_start_next) 
+
+    def _reset_and_start_next(self):
+        self.chat_window.clear_chat()
+        self._start_new_chat()
