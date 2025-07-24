@@ -4,12 +4,11 @@ from PyQt5.QtCore import QTimer
 from PyQt5.QtCore import Qt
 import random
 import re
+import uuid
+from datetime import datetime
+import os
 from chatgpt_api import get_response
 from functools import partial
-
-from logger import get_logger
-logger = get_logger("conversation")
-
 
 class ConversationManager:
     def __init__(self, config, chat_window):
@@ -21,6 +20,8 @@ class ConversationManager:
         self.person1 = None
         self.person2 = None
         self.history = []
+        self.conv_log_path = None
+
 
     def start(self):
         self._start_new_chat()
@@ -31,13 +32,17 @@ class ConversationManager:
         self.turn_index = 0
         self.history = []
 
-        logger.info("Starting new conversation between %s and %s", self.person1.name, self.person2.name)
+        # Generate new conversation log file
+        unique_id = uuid.uuid4().hex[:8]
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        self.conv_log_path = os.path.join("logs", f"conv_{timestamp}_{unique_id}.txt")
+
+        with open(self.conv_log_path, "w", encoding="utf-8") as f:
+            f.write(f"Conversation between {self.person1.name} and {self.person2.name}\n\n")
 
         # Start with person1 asking a question
         prompt = "Ask a friendly question to get to know someone."
         opener = get_response(self.person1.prompt, [{"role": "user", "content": prompt}])
-
-        logger.debug("Generated prompt: %s", opener)
 
         self.chat_window.add_message(self.person1.image_file_name, opener, self.person1.color, align_left=True)
         self.history.append({"role": "user", "content": opener})
@@ -101,10 +106,14 @@ class ConversationManager:
 
         self.chat_window.add_message(speaker.image_file_name, text, speaker.color, align)
 
+        # Log to conversation file
+        if self.conv_log_path:
+            with open(self.conv_log_path, "a", encoding="utf-8") as f:
+                name = speaker.name
+                f.write(f"{name}: {text}\n")
+
     def _finalize_turn(self, responder_role, full_text):
         self.history.append({"role": responder_role, "content": full_text})
-
-        logger.debug("Finalize: %s", full_text)
 
         self.turn_index += 1
         QTimer.singleShot(3000, self._next_turn)
@@ -160,43 +169,25 @@ class ConversationManager:
     def _show_response(self, speaker, responder_role, align, typing_widget):
 
         # Get actual reply
-
         reply = get_response(speaker.prompt, self.history)
 
-
-
         # Remove "typing..." bubble
-
         self.chat_window.chat_layout.removeWidget(typing_widget)
 
         typing_widget.deleteLater()
 
-
-
         # Split long reply into chunks
-
         chunks = self.split_message_into_chunks(reply, 200)
 
-
-
         # Show each chunk with typing delay
-
         total_delay = 0
 
         for i, chunk in enumerate(chunks):
-
             delay = i * 2500  # adjust delay between bubbles
-
-
-
             QTimer.singleShot(delay, partial(self._show_typing_bubble, speaker, align, chunk))
 
-
-
         # Add full reply to history once all chunks are sent
-
         final_delay = len(chunks) * 2500 + 500  # buffer after last message
-
         QTimer.singleShot(final_delay, lambda: self._finalize_turn(responder_role, reply))
 
     def _say_goodbye(self):
@@ -207,7 +198,8 @@ class ConversationManager:
         goodbye_prompt = "Say goodbye to the other person in a friendly and character-appropriate way."
         goodbye_text = get_response(speaker.prompt, [{"role": "user", "content": goodbye_prompt}])
 
-        logger.debug("Saying goodbye: %s", goodbye_text)
+        with open(self.conv_log_path, "a", encoding="utf-8") as f:
+            f.write(f"{speaker.name}: {goodbye_text}\n\n[Conversation End]\n")
 
         self.chat_window.add_message(speaker.image_file_name, goodbye_text, speaker.color, align)
         self.history.append({"role": role, "content": goodbye_text})
