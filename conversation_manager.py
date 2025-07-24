@@ -157,27 +157,47 @@ class ConversationManager:
         # --- STEP 2: After delay, replace typing with real message ---
         QTimer.singleShot(2500, lambda: self._show_response(speaker, responder_role, align, bubble))
 
-    def _show_response(self, speaker, responder_role, align, typing_widget):
-        # Get actual reply
-        reply = get_response(speaker.prompt, self.history)
+        def _show_response(self, speaker, responder_role, align, typing_widget):
 
-        # Remove original "typing..." bubble
-        self.chat_window.chat_layout.removeWidget(typing_widget)
-        typing_widget.deleteLater()
+            # Get actual reply
 
-        # Split long reply into chunks
-        chunks = self.split_message_into_chunks(reply, 200)
+            reply = get_response(speaker.prompt, self.history)
 
-        total_delay = 0
-        for chunk in chunks:
-            # Estimate delay based on chunk length
-            char_count = len(chunk)
-            typing_speed = random.uniform(30, 50)  # characters per second
-            delay_ms = int((char_count / typing_speed) * 1000) + random.randint(200, 400)
 
-            # Schedule typing+message pair
-            QTimer.singleShot(total_delay, lambda c=chunk: self._show_typing_bubble(speaker, align, c))
-            total_delay += delay_ms
+
+            # Remove "typing..." bubble
+
+            self.chat_window.chat_layout.removeWidget(typing_widget)
+
+            typing_widget.deleteLater()
+
+
+
+            # Split long reply into chunks
+
+            chunks = self.split_message_into_chunks(reply, 200)
+
+
+
+            # Show each chunk with typing delay
+
+            total_delay = 0
+
+            for i, chunk in enumerate(chunks):
+
+                delay = i * 2500  # adjust delay between bubbles
+
+
+
+                QTimer.singleShot(delay, partial(self._show_typing_bubble, speaker, align, chunk))
+
+
+
+            # Add full reply to history once all chunks are sent
+
+            final_delay = len(chunks) * 2500 + 500  # buffer after last message
+
+            QTimer.singleShot(final_delay, lambda: self._finalize_turn(responder_role, reply))
 
     def _say_goodbye(self):
         speaker = self.person1
