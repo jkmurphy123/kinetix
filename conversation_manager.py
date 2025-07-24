@@ -7,6 +7,10 @@ import re
 from chatgpt_api import get_response
 from functools import partial
 
+from logger import get_logger
+logger = get_logger("conversation")
+
+
 class ConversationManager:
     def __init__(self, config, chat_window):
         self.config = config
@@ -27,9 +31,14 @@ class ConversationManager:
         self.turn_index = 0
         self.history = []
 
+        logger.info("Starting new conversation between %s and %s", self.person1.name, self.person2.name)
+
         # Start with person1 asking a question
         prompt = "Ask a friendly question to get to know someone."
         opener = get_response(self.person1.prompt, [{"role": "user", "content": prompt}])
+
+        logger.debug("Generated prompt: %s", opener)
+
         self.chat_window.add_message(self.person1.image_file_name, opener, self.person1.color, align_left=True)
         self.history.append({"role": "user", "content": opener})
 
@@ -94,6 +103,9 @@ class ConversationManager:
 
     def _finalize_turn(self, responder_role, full_text):
         self.history.append({"role": responder_role, "content": full_text})
+
+        logger.debug("Finalize: %s", full_text)
+
         self.turn_index += 1
         QTimer.singleShot(3000, self._next_turn)
 
@@ -154,7 +166,7 @@ class ConversationManager:
         typing_widget.deleteLater()
 
         # Split long reply into chunks
-        chunks = split_message_into_chunks(reply, 200)
+        chunks = self.split_message_into_chunks(reply, 200)
 
         total_delay = 0
         for chunk in chunks:
@@ -174,6 +186,8 @@ class ConversationManager:
 
         goodbye_prompt = "Say goodbye to the other person in a friendly and character-appropriate way."
         goodbye_text = get_response(speaker.prompt, [{"role": "user", "content": goodbye_prompt}])
+
+        logger.debug("Saying goodbye: %s", goodbye_text)
 
         self.chat_window.add_message(speaker.image_file_name, goodbye_text, speaker.color, align)
         self.history.append({"role": role, "content": goodbye_text})

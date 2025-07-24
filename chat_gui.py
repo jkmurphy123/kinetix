@@ -12,6 +12,10 @@ from dotenv import load_dotenv
 
 from config_loader import ChatConfig
 
+from logger import get_logger
+logger = get_logger("chat_gui")
+
+
 class ChatBubble(QWidget):
     def __init__(self, avatar_path, message, color, align_left=True):
         super().__init__()
@@ -64,14 +68,16 @@ class ChatWindow(QWidget):
         self.setLayout(main_layout)
 
     def add_message(self, avatar_path, message, color, align_left=True):
-        #print(f"add_messae: {message}")
         def add():
+            # Log message
+            logger.info(f"{'Left' if align_left else 'Right'}: {message}")
+
             bubble = ChatBubble(avatar_path, message, color, align_left)
             self.chat_layout.addWidget(bubble)
             self.scroll_area.verticalScrollBar().setValue(
                 self.scroll_area.verticalScrollBar().maximum()
             )
-        QTimer.singleShot(0, add)  # Safe Qt-thread context execution
+        QTimer.singleShot(0, add)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape:
